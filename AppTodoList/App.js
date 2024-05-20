@@ -1,96 +1,98 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { StyleSheet, Text, View, Image, ScrollView, SafeAreaView, Button, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, Text, View, Image, ScrollView, Button, TextInput, KeyboardAvoidingView, Platform, Modal } from 'react-native';
+import TodoList from './components/TodoList';
 
 export default function App() {
-  const [todoTitle, setText] = useState('');
-  let [newTodos, setTodos] = useState([]);
-  newTodos = todos;
+  const [todos, setTodos] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newTodo, setText] = useState('');
+  const [editState, setEditState] = useState(false);
+  const [editTodoIndex, setEditTodoIndex] = useState(0);
 
-  function CompleteButton({ todo }) {
-    if (todo.completed) {
-      return null;
-    } else {
-      return (
-        <Button title="Complete" onPress={() => {
-          todo.completed = true;
-          setTodos([...newTodos]);
-          alert(`${todo.title} is now completed`);
-        }} />
-      );
+  const addTodo = () => {
+    if (editState) {
+      todos[editTodoIndex].title = newTodo;
+      setTodos([...todos]);
+    } else{
+      setTodos([...todos, { id: todos.length + 1, title: newTodo, completed: false }]);
     }
+    setText('');
+    setModalVisible(!modalVisible);
   }
 
+  function CompleteButton(todo) {
+    if (todo.completed) return null;
+    todo.completed = true;
+    setTodos([...todos]);
+    alert(`${todo.title} is now completed`);
+  }
+
+  function DeleteButton(todo){
+    const index = todos.indexOf(todo);
+    todos.splice(index, 1);
+    setTodos([...todos]);
+    alert(`${todo.title} is now deleted`);
+  }
+
+  function EditButton(todo){
+    setText(todo.title);
+    setEditState(true);
+    setEditTodoIndex(todos.indexOf(todo));
+    setModalVisible(true);
+    alert('Todo has been edited');
+  }
+  
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.App}>
-        <View style={styles.AppBar}>
-          <Image source={require('./assets/logo.png')} style={{ width: 50, height: 50 }} />
+      <View style={styles.AppBar}>
+        <Image source={require('./assets/logo.png')} style={{ width: 50, height: 50 }} />
+      </View>
+      <ScrollView style={styles.container}>
+        
+        <Text style={styles.strong}>My Todo list</Text>
+        <TodoList todos={todos} CompleteButton={CompleteButton} DeleteButton={DeleteButton} EditButton={EditButton} />
+        <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <TextInput
+              style={styles.input}
+              placeholder="Entrer un nouveau todo"
+              value={newTodo}
+              onChangeText={setText}
+            />
+            <Button title="Ajouter" onPress={() =>{
+              addTodo();
+              console.log('new todo:', newTodo);
+              }} />
+            <Button title="Annuler" onPress={() => {
+              setModalVisible(false)
+              setText('');
+              }} />
+          </View>
         </View>
-        <ScrollView style={styles.container}>
-          <Text style={styles.strong}>My Todo list</Text>
-          <SafeAreaView>
-            {newTodos.map(todo => (
-              <View key={todo.id} style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc', flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: 18, color: todo.completed ? '#aaa' : '#000' }}>{todo.title}</Text>
-                <View style={{ flexDirection: 'row', columnGap: 5, alignItems: 'center' }}>
-                  <CompleteButton todo={todo} />
-                  <TouchableOpacity onPress={() => {
-                    const index = newTodos.indexOf(todo);
-                    newTodos.splice(index, 1);
-                    setTodos([...newTodos]);
-                    alert(`${todo.title} is now deleted`);
-                    }}>
-                    <Image source={require('./assets/delete.png')} style={{ width: 20, height: 20 }} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </SafeAreaView>
-        </ScrollView>
-        <View style={styles.BottomBar}>
-          <TextInput placeholder="Enter Todo" placeholderTextColor="#ccc" style={{ width: '70%', padding: 10, borderColor: '#ccc', borderWidth: 1 }}
-                     onChangeText={newText => setText(newText)} ref={input => { this.todoTitle = input }} />
-          <Button color="white" title="Add Todo" onPress={() => {
-            newTodos.push({ id: newTodos.length + 1, title: todoTitle, completed: false });
-            setTodos([...newTodos]);
-            setText('');
-            alert(`${todoTitle} is now added to the list`)
-            this.todoTitle.clear();
-            this.todoTitle.focus(false);
-            }} />
-        </View>
-        <StatusBar style="light" />
+      </Modal>
+      </ScrollView>
+      <View style={styles.BottomBar}>
+        <Button color="white" title="Add Todo" onPress={() => {
+            setModalVisible(!modalVisible);
+          }} />
+      </View>
+      
+      <StatusBar style="light" />
     </KeyboardAvoidingView>
+
   );
 }
 
-
-
-const todos = [
-  { id: 1, title: 'Learn React Native', completed: true },
-  { id: 2, title: 'Learn React Navigation', completed: true },
-  { id: 3, title: 'Learn React Native Elements', completed: false },
-  { id: 4, title: 'Learn React Native Paper', completed: false },
-  { id: 5, title: 'Learn React Native Vector Icons', completed: false },
-  { id: 6, title: 'Learn React Native Elements', completed: false },
-  { id: 7, title: 'Learn React Native Paper', completed: false },
-  { id: 8, title: 'Learn React Native Vector Icons', completed: false },
-  { id: 9, title: 'Learn React Native Elements', completed: false },
-  { id: 10, title: 'Learn React Native Paper', completed: false },
-  { id: 11, title: 'Learn React Native Vector Icons', completed: false },
-  { id: 12, title: 'Learn React Native Elements', completed: false },
-  { id: 13, title: 'Learn React Native Paper', completed: false },
-  { id: 14, title: 'Learn React Native Vector Icons', completed: false },
-  { id: 15, title: 'Learn React Native Elements', completed: false },
-  { id: 16, title: 'Learn React Native Paper', completed: false },
-  { id: 17, title: 'Learn React Native Vector Icons', completed: false },
-  { id: 18, title: 'Learn React Native Elements', completed: false },
-  { id: 19, title: 'Learn React Native Paper', completed: false },
-  { id: 20, title: 'Learn React Native Vector Icons', completed: false },
-];
-
 const styles = StyleSheet.create({
   App: {
+    zIndex: 0,
     flex: 1,
     backgroundColor: '#fff',
     flexDirection: 'column',
@@ -122,5 +124,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     color: 'white',
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  input: {
+    width: '100%',
+    padding: 10,
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
   },
 });
